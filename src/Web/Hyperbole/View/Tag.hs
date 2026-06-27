@@ -203,6 +203,21 @@ table dts (TableColumns wcs) = do
           forM_ cols $ \tc -> do
             tc.dataCell dt
 
+table' :: (dt -> View c () -> View c ()) -> [dt] -> TableColumns c dt () -> View c ()
+table' tr dts (TableColumns wcs) = do
+  let cols = runPureEff . execStateLocal [] $ wcs
+  tag "table" $ do
+    tag "thead" $ do
+      tag "tr" $ do
+        forM_ cols $ \tc -> do
+          let TableHead hd = tc.headCell
+          hd
+    tag "tbody" $ do
+      forM_ dts $ \dt -> do
+        tr dt $ do
+          forM_ cols $ \tc -> do
+            tc.dataCell dt
+
 
 usersTable :: View c ()
 usersTable = do
