@@ -7,7 +7,9 @@ module Web.Hyperbole.HyperView.Forms
   ( FromForm (..)
   , FromFormF (..)
   , lookupField
+  , lookupFieldAll
   , parseField
+  , parseFieldAll
   , FromField (..)
   , GenFields (..)
   , fieldNames
@@ -117,12 +119,19 @@ formData = do
 lookupField :: ParamKey -> Form -> Maybe FormParam
 lookupField key f = FormParam . cs <$> lookup key f.params <|> FileParam <$> lookup key f.files
 
+lookupFieldAll :: ParamKey -> Form -> [FormParam]
+lookupFieldAll key f =
+  [(FormParam (cs p)) | (k, p) <- f.params, k == key]
+    ++ [(FileParam p) | (k, p) <- f.files, k == key]
 
 parseField :: forall a. (FromField a) => ParamKey -> Form -> Either String a
 parseField key f = do
   let mt :: Maybe FormParam = lookupField key f
   a <- first (\err -> cs key <> ": " <> err) $ fromField @a mt
   pure a
+
+parseFieldAll :: forall a. (FromField a) => ParamKey -> Form -> Either String [a]
+parseFieldAll key = traverse (fromField . Just) . lookupFieldAll key
 
 
 -- where
